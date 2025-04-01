@@ -1,10 +1,10 @@
 import torch.nn as nn
 
-class SoftmaxMLP(nn.Module):
-    def __init__(self, input_layer, output_layer):
+class MLP(nn.Module):
+    def __init__(self, input_dim, output_dim):
         super().__init__()
-        self.fc1 = nn.Linear(input_layer, 40)
-        self.fc2 = nn.Linear(40, output_layer)
+        self.fc1 = nn.Linear(input_dim, 10)
+        self.fc2 = nn.Linear(10, output_dim)
         self.activation = nn.Softplus()
 
     def forward(self, input):

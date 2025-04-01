@@ -1,7 +1,0 @@
-torch
-numpy
-torchvision
-torchaudio
-
-
-# Install using command in CLI 'pip -m install torch, numpy'

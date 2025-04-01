@@ -81,33 +81,31 @@ def train(model: nn.Module,
           criterion: nn.Module,
           optimizer: torch.optim.Optimizer,
           epochs: int,
-          device: torch.device,
           gmin: float,
           l2_lambda: float,
-          l1_approx_lambda: float,
-          train_only: bool = True) -> tuple[nn.Module, dict, dict] | nn.Module:
-    
+          l1_lambda: float) -> tuple[nn.Module, dict, dict] | nn.Module:
+    device = next(model.parameters()).device
     len_dataset = len(train_dataset)
     model.train()
 
-    trainloader = DataLoader(train_dataset, batch_size=len_dataset, shuffle=True, num_workers=4, pin_memory=True)
+    trainloader = DataLoader(train_dataset, batch_size=len_dataset, shuffle=True, num_workers=8, pin_memory=True)
     x, y = next(iter(trainloader))
     x, y = x.to(device), y.to(device)
 
-    gradmax = float('-inf')
+    gradmax = float('inf')
 
     for epoch in range(epochs):
         def closure():
             optimizer.zero_grad()
             y_hat = model(x)
 
-            loss = criterion(y_hat, y) + (l2_lambda / len_dataset) * l2(model) + (l1_approx_lambda / len_dataset) * log_cosh(model)
+            loss = criterion(y_hat, y) + (l2_lambda / len_dataset) * l2(model) + (l1_lambda / len_dataset) * log_cosh(model)
             loss.backward()
 
             return loss
         
         loss = optimizer.step(closure)
-        gradmax = max(p.grad.abs().max() for p in model.parameters()).item()
+        gradmax = max([p.grad.abs().max() for p in model.parameters()])
 
         print(f'\n\tEpoch = {epoch + 1}\tTraining loss = {loss:.4f}\tGradmax={gradmax:.4f}')
 
@@ -118,8 +116,6 @@ def train(model: nn.Module,
     if (epoch >= epochs - 1):
         print('Failed to achieve GRADMAX.')
 
-    if not train_only:
-        return model
 
     #B = compute_B(model, x, y, len_dataset)
     A = compute_B(model, x, y, len_dataset)
